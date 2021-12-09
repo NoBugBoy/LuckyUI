@@ -1,0 +1,26 @@
+{
+  "name": "vue3_cli_default",
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview"
+  },
+  "dependencies": {
+    "bin-editor-next": "^1.0.6",
+    "highlight.js": "^11.3.1",
+    "moment": "^2.29.1",
+    "vue": "^3.2.8",
+    "vue-json-editor": "^1.4.3",
+    "vue-router": "^4.0.0-beta.13",
+    "vue3-json-viewer": "^1.0.4"
+  },
+  "devDependencies": {
+    "@vicons/ionicons5": "^0.11.0",
+    "@vitejs/plugin-vue": "^1.6.0",
+    "@vue/compiler-sfc": "^3.2.6",
+    "axios": "^0.24.0",
+    "naive-ui": "^2.21.4",
+    "vite": "^2.5.2"
+  }
+}
