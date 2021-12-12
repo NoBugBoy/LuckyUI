@@ -20,6 +20,12 @@ let VueRoute = createRouter(
                name: 'Api',
                component: () => import("/src/components/Api.vue")
                
+           },
+           {
+               path: '/manager',
+               name: 'Manager',
+               component: () => import("/src/components/Manager.vue")
+               
            }
        ]
    }

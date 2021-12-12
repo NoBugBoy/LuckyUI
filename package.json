@@ -11,6 +11,7 @@
     "highlight.js": "^11.3.1",
     "moment": "^2.29.1",
     "vue": "^3.2.8",
+    "vue-clipboard2": "^0.3.3",
     "vue-json-editor": "^1.4.3",
     "vue-router": "^4.0.0-beta.13",
     "vue3-json-viewer": "^1.0.4"

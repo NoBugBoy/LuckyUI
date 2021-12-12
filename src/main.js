@@ -10,6 +10,7 @@ import 'brace/mode/json'
 import 'brace/snippets/json'
 import 'brace/theme/github'
 import 'brace/theme/vibrant_ink'
+import VueClipboard from 'vue-clipboard2'
 import Moment from 'moment'
 
 
@@ -18,6 +19,7 @@ const app = createApp(App)
 
 app.use(router)
 app.use(JsonViewer)
+app.use(VueClipboard)
 app.component(Editor.name, Editor)
 let g = {}
 app.provide('g',ref(g))

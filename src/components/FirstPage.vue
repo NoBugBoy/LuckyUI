@@ -1,47 +1,53 @@
 <template>
     <div >
-    <n-list bordered style="width: 75%;text-align: center; margin: 10px auto;">
-        <template #header><span style="font-size: 22px;">Restful Api Documentation</span></template>
-        <n-list-item>
-          <n-thing title="标题">{{t.info.title}}</n-thing>
-        </n-list-item> 
-        <n-list-item>
-          <n-thing title="简介">{{t.info.description}}</n-thing>
-        </n-list-item>
-        <n-list-item>
-          <n-thing title="作者"> {{t.info.contact.name}}</n-thing>
-        </n-list-item>
-        <n-list-item>
-          <n-thing title="Host" >{{t.info.contact.url}}</n-thing>
-        </n-list-item> 
-        <n-list-item>
-          <n-thing title="base path">{{t.basePath}}</n-thing>
-        </n-list-item> 
-         <n-list-item>
-          <n-thing title="分组名称">{{res[0].url}}</n-thing>
-        </n-list-item> 
-        <n-list-item>
-          <n-thing title="分组Url">{{res[0].location}}</n-thing>
-        </n-list-item> 
-        <n-list-item>
-             <n-thing title="接口统计信息">
-                 <n-row >
-                     <n-col :span="4">
-                         <n-statistic label="POST" :value="postCount"/>
-                     </n-col>
-                     <n-col :span="4">
-                          <n-statistic label="GET" :value="getCount"/>
-                     </n-col>
-                     <n-col :span="4">
-                          <n-statistic label="PUT" :value="putCount"/>
-                     </n-col>
-                     <n-col :span="4">
-                          <n-statistic label="DELETE" :value="deleteCount"/>
-                     </n-col>
-                 </n-row>
-             </n-thing>
-       </n-list-item>
-      </n-list>
+        <n-card title="基础信息"> 
+        <n-grid :x-gap="12" :y-gap="20" :cols="2">
+            <n-grid-item>
+             <n-card title="标题:" hoverable> {{t.info.title}} </n-card>
+            </n-grid-item>
+               <n-grid-item>
+            <n-card title="Host:" hoverable> {{t.info.contact.url}} </n-card>
+            </n-grid-item>
+         
+            <n-grid-item>
+             <n-card title="简介:" hoverable> {{t.info.description}} </n-card>
+            </n-grid-item>
+            <n-grid-item>
+             <n-card title="base path:" hoverable> {{t.basePath}} </n-card>
+            </n-grid-item>
+            <n-grid-item>
+             <n-card title="作者:" hoverable> {{t.info.contact.name}} </n-card>
+            </n-grid-item>
+          
+            <n-grid-item>
+              <n-card title="分组名称:" hoverable> {{res[0].url}} </n-card>
+            </n-grid-item>
+
+                     </n-grid>
+        </n-card>
+        <n-card  title="Api类型统计" style="margin-top: 30px;">
+        
+                <n-grid :x-gap="50" :y-gap="10" :cols="4">
+                    <n-grid-item>
+                     <n-card title="POST" hoverable> <span id="typeCount">{{postCount}}</span>  </n-card>
+                    </n-grid-item>
+                    <n-grid-item>
+                     <n-card title="GET" hoverable> <span id="typeCount">{{getCount}}</span> </n-card>
+                    </n-grid-item>
+                    <n-grid-item>
+                     <n-card title="PUT" hoverable><span id="typeCount">{{putCount}}</span></n-card>
+                    </n-grid-item>
+                    <n-grid-item>
+                    <n-card title="DELETE" hoverable><span id="typeCount">{{deleteCount}}</span></n-card>
+                    </n-grid-item>
+                    </n-grid>
+           
+               
+               
+              
+             
+        </n-card>
+       
      </div>
 </template>
 
@@ -49,6 +55,8 @@
     import {
         NRow,
         NList,
+        NGrid,
+        NGridItem,
         NListItem,
         NThing,
         NTabs,
@@ -98,4 +106,7 @@
 </script>
 
 <style>
+    #typeCount{
+        font-size: 24px;
+    }
 </style>

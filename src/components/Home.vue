@@ -1,4 +1,5 @@
 <template>
+    <n-theme-editor></n-theme-editor>
     <div>
         <n-layout has-sider position="absolute" style="top: 64px; bottom: 64px;">
             <n-layout-sider bordered collapse-mode="width" :collapsed-width="100" :width="280" :native-scrollbar="false"
@@ -38,6 +39,7 @@
 <script setup>
     import {
         NConfigProvider,
+        NThemeEditor,
         NRow,
         NList,
         NListItem,
@@ -58,11 +60,13 @@
         NLayoutFooter,
         NCollapse,
         NCollapseItem,
+        NGradientText,
         NSpace,
         NH2,
         NIcon,
         NEllipsis,
         NBadge,
+        NPopover,
         NMenu,
         NLayoutSider
     } from 'naive-ui'
@@ -79,6 +83,7 @@
     } from 'vue-router'
     import {
         Rocket,
+        Aperture,
         CaretDownOutline,
         Home,
         CloseCircle,
@@ -90,11 +95,14 @@
             label: '主页',
             key: 'home',
             name: 'home',
-            href: 'https://baike.baidu.com/item/%E4%B8%94%E5%90%AC%E9%A3%8E%E5%90%9F/3199'
         },
         {
             label: 'Models',
             key: 'mad',
+        },
+        {
+            label: '请求用例管理',
+            key: 'manager',
         }
     ])
     let g = inject('g')
@@ -114,7 +122,6 @@
             let innerKey = Object.keys(item);
             innerKey.forEach((ik) => {
                 const tag = item[ik].tags[0]
-              
                 item[ik]['method'] = ik
                 item[ik]['url'] = k
                 if (Object.keys(pathsTagsMap).indexOf(tag) < 0) {
@@ -123,7 +130,6 @@
                 } else {
                     pathsTagsMap[tag].push(item)
                 }
-
 
             })
         })
@@ -154,8 +160,10 @@
                 menu['children'] = methodTypes.map((group) => {
                     return {
                         "type": "group",
-                        "label": group.toUpperCase(),
+                        //不知道为啥这里已经渲染一次 还要在renderMenuLabel里再渲染一次
+                        "label": () => groupFunc(group),
                         "key": api + group,
+                        "group": group,
                         "children": methodMap[group].map((c) => {
                             index++;
                             return {
@@ -174,6 +182,17 @@
 
 
     })
+    const groupFunc = (group) => {
+        let type = 'success'
+        switch(group){
+            case 'get' : type = 'info'; break;
+            case 'post' : type = 'success'; break;
+            case 'put' : type = 'warning'; break;
+            case 'delete' : type = 'error'; break;
+            default: break;
+        }
+        return h(NGradientText,{'type':type},{default: () => group.toUpperCase()})
+    } 
     const valueRef = ref('')
     valueRef.value = 'home'
     const panelsRef = ref([{
@@ -206,7 +225,11 @@
                     "data": 'identity'
                 }
             })
-        } else {
+        }else if(routeKey == 'manager'){
+            route.push({
+                name: 'Manager'
+            })
+        }else {
             route.push({
                 name: 'Api',
                 params: {
@@ -218,8 +241,9 @@
 
     //显示menu api数量和是否新增
     let renderMenuLabel = (option) => {
-        // console.log(option)
-
+         if('group' in option){
+                return groupFunc(option.group)
+           }
         if ('children' in option) {
             let count = 0
             if (option.children != undefined) {
@@ -230,7 +254,6 @@
 
                 })
             }
-
             return h(
                 "span",
                 null, [
@@ -243,13 +266,14 @@
                                 style: "margin-left:6px"
                             }),
                         ],
-
                     ),
                 ]
             )
+                
+             
         }
 
-        return option.label
+        return h(NEllipsis,null,{default:() => option.label })
     }
 
     let renderMenuIcon = (option) => {
@@ -261,6 +285,10 @@
             return h(NIcon, null, {
                 default: () => h(ColorFilter)
             })
+        }else if(option.key === 'manager'){
+           return h(NIcon, null, {
+               default: () => h(Aperture)
+           })
         }
         return h(NIcon, null, {
             default: () => h(Rocket)
