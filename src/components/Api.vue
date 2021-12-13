@@ -856,12 +856,12 @@
     watch(() => route.params, () => {
         const data = route.params.data
         //初始化响应值
-        responseTreeData.value = []
-        openSelectOptions.value= []
-        rescode.value = ''
-        restime.value = ''
-        responseJson.value = ''
-        editJson.value = ''
+        // responseTreeData.value = []
+        // openSelectOptions.value= []
+        // rescode.value = ''
+        // restime.value = ''
+        // responseJson.value = ''
+        // editJson.value = ''
         //切换到参数tab页
         switchResponse.value = 'Params'
         //undefined 跳到了主页

@@ -229,6 +229,10 @@
             route.push({
                 name: 'Manager'
             })
+        }else if(routeKey == 'mad'){
+            route.push({
+                name: 'Models'
+            })
         }else {
             route.push({
                 name: 'Api',

@@ -25,7 +25,8 @@
         NIcon,
     } from 'naive-ui'
     import {
-        LogoGithub
+        LogoGithub,
+        ShareSocial
     } from '@vicons/ionicons5'
     import {
         getCurrentInstance,
@@ -58,15 +59,15 @@
     const g = inject('g')
     g.value['theme'] = 1
     let theme = ref(null)
-    let msg = ref("深色主题")
+    let msg = ref("Dark Theme")
     const switchTheme = () => {
         if (theme.value == null) {
             theme.value = darkTheme;
-            msg.value = "浅色主题"
+            msg.value = "Light Theme"
             g.value['theme'] = 0
         } else {
             theme.value = null;
-            msg.value = "深色主题"
+            msg.value = "Dark Theme"
             g.value['theme'] = 1
         }
     }
@@ -83,7 +84,8 @@
     }
     onMounted(() => {
         let url = window.location.pathname.replace('/doc.html', '')
-        url = "http://localhost:8888"
+        //调试时替换
+        // url = "http://localhost:8888"
         //获取分组信息
         let run = axios({
             url: url + "/swagger-resources",
@@ -159,12 +161,7 @@
                                 </n-icon>
                             </template>
                             YDoc
-                        </n-button>
-
-
-
-
-
+                        </n-button> 
                     </n-space>
 
                 </div>

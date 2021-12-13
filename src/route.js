@@ -26,6 +26,12 @@ let VueRoute = createRouter(
                name: 'Manager',
                component: () => import("/src/components/Manager.vue")
                
+           },
+           {
+               path: '/models',
+               name: 'Models',
+               component: () => import("/src/components/Models.vue")
+               
            }
        ]
    }
