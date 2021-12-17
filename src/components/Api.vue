@@ -1,6 +1,6 @@
 <template>
-    <n-card style="margin: 10px;">
-        <n-tabs default-value="doc" size="large">
+    <n-card style="margin: 10px;" :key="new Date().getTime()">
+        <n-tabs default-value="doc" size="large" :value="tabValue" :on-update:value="changeTab">
             <n-tab-pane name="doc" tab="文档">
                 <n-card title="Documentation" style="margin: 10px;">
                     <n-grid :x-gap="50" :y-gap="10" :cols="3">
@@ -240,29 +240,39 @@
                             </n-tab-pane>
                             <n-tab-pane name="ResponseBody" tab="ResponseBody">
                                 <n-card title="Response">
-                                    <div style="display: flex;">
-                                        <n-button type='success' style="margin-bottom: 10px;" @Click='format0' size="small">格式化
-                                        </n-button>
-                                        <n-button type='success' style="margin-bottom: 10px;margin-left: 10px;"
-                                            @Click='zip0' size="small">折叠
-                                        </n-button>
-                                        <n-button type='success' style="margin-bottom: 10px;margin-left: 10px;"
-                                            @Click='narrow' size="small">缩小</n-button>
-                                        <n-button type='success' style="margin-bottom: 10px;margin-left: 10px;"
-                                            @Click='enlarge' size="small">放大</n-button>
-
-                                        <span v-if=" rescode!= '' "
-                                            style="display: flex;justify-content: flex-end;margin-left: auto;">
-                                            <span style="font-size: 16px;">状态码: {{rescode}} </span>
-                                            <n-divider vertical />
-                                            <span style="font-size: 16px;">耗时: {{restime}}ms </span>
-                                        </span>
-
-
-                                    </div>
-                                    <b-ace-editor style="border-style:none" v-model="responseJson" lang="json" width="100%" height="600"
-                                        :theme="localRef==0 ? 'vibrant_ink':'github'" :readonly="read"
-                                        :font-size="fontsize"></b-ace-editor>
+                                   <n-spin :show="resOk">
+                                        <template #description>等待数据响应中..</template>
+                                           <div style="display: flex;">
+                                               <n-button type='success' style="margin-bottom: 10px;" @Click='format0' size="small">格式化
+                                               </n-button>
+                                               <n-button type='success' style="margin-bottom: 10px;margin-left: 10px;"
+                                                   @Click='zip0' size="small">折叠
+                                               </n-button>
+                                               <n-button type='success' style="margin-bottom: 10px;margin-left: 10px;"
+                                                   @Click='narrow' size="small">缩小</n-button>
+                                               <n-button type='success' style="margin-bottom: 10px;margin-left: 10px;"
+                                                   @Click='enlarge' size="small">放大</n-button>
+                                           
+                                               <span v-if=" rescode!= '' "
+                                                   style="display: flex;justify-content: flex-end;margin-left: auto;">
+                                                   <span style="font-size: 16px;">状态码: {{rescode}} </span>
+                                                   <n-divider vertical />
+                                                   <span style="font-size: 16px;">耗时: {{restime}}ms </span>
+                                               </span>
+                                           
+                                             
+                                           </div>
+                                           
+                                            
+                                                 <b-ace-editor style="border-style:none" v-model="responseJson" lang="json" width="100%" height="600"
+                                                     :theme="localRef==0 ? 'vibrant_ink':'github'" :readonly="read"
+                                                     :font-size="fontsize"></b-ace-editor>
+                                                  
+                                    
+                                   
+                                      </n-spin>
+                                   
+                                         
                                 </n-card>
                             </n-tab-pane>
 
@@ -307,7 +317,7 @@
         NInput,
         NCollapse,
         NCollapseItem,
-        NText,
+        NSpin,
         NCard,
         NTag,
         NBreadcrumb,
@@ -353,7 +363,7 @@
         ColorFilter
     } from '@vicons/ionicons5'
     import axios from "/src/request.js"
-
+    
     const message = useMessage()
     //处理第三方json编辑框不能跟随主题变色问题
     let g = inject('g')
@@ -368,6 +378,7 @@
     let statusList = ref([])
     //开启选择本地请求
     let openSelect = ref('')
+    
     let openSelectOptions = ref([])
      let renderLabel =  (option) => {
             return h(
@@ -602,6 +613,10 @@
             show.vlaue = true
         }, 160)
     })
+    let tabValue = ref('doc')
+    let changeTab = (x) => {
+        tabValue.value = x
+    }
     let desc = ref('')
     let url = ref('')
     let reqType = ref('')
@@ -673,6 +688,7 @@
             }
       ]
       let copyTitle = (row) => {
+        
         const input = document.createElement('input');
         	input.value = row.name
         	document.body.appendChild(input);
@@ -761,8 +777,12 @@
                 return '';
         }
     }
+    let resOk = ref(false)
     //发送请求
     let send = () => {
+        //切换到参数tab
+        switchResponse.value = 'ResponseBody'
+        resOk.value = true;
         //处理参数 只处理active的
         let header = {
             'Content-Type': radio.value
@@ -794,12 +814,14 @@
                 rescode.value = res.status
                 responseJson.value = JSON.stringify(res.data)
                 format0()
+                 resOk.value = false
             }).catch(error => {
 
                 rescode.value = error.response.status
                 restime.value = new Date() - error.response.config.startTime
                 responseJson.value = err(error.response)
                 format0()
+                 resOk.value = false
             })
         } else {
             // 根据请求格式发送请求
@@ -818,16 +840,17 @@
                 rescode.value = res.status
                 restime.value = new Date() - res.config.startTime
                 format0()
+                 resOk.value = false
             }).catch(error => {
                 rescode.value = error.response.status
                 restime.value = new Date() - error.response.config.startTime
                 responseJson.value = err(error.response)
                 format0()
+                 resOk.value = false
             })
 
         }
-        //切换到参数tab
-        switchResponse.value = 'ResponseBody'
+       
 
     }
  let overrides = (titile,data) => {
@@ -849,39 +872,70 @@
     let read = false
     let fontsize = ref(12)
     let jsonData = ref('')
-
  //返回值树的结构
     let responseTreeData = ref([])
     //监听路由变化
     watch(() => route.params, () => {
         const data = route.params.data
         //初始化响应值
-        // responseTreeData.value = []
-        // openSelectOptions.value= []
-        // rescode.value = ''
-        // restime.value = ''
-        // responseJson.value = ''
-        // editJson.value = ''
-        //切换到参数tab页
-        switchResponse.value = 'Params'
-        //undefined 跳到了主页
+        openSelectOptions.value= []
+        sessionStorage.removeItem(desc.value + reqType.value.toLowerCase())
+        if(desc.value != '' && route.path != '/firstPage'){
+            //离开时记录当时所有页面需要知道的状态，当再次进入时获取，删除tab时删除
+            let sessiondata = {}
+            sessiondata['editJson'] = editJson.value
+            sessiondata['reqBody'] = reqBody.value
+            sessiondata['reqParams'] = reqParams.value
+            sessiondata['isBody'] = isBody.value
+            sessiondata['tabValue'] = tabValue.value
+            sessiondata['responseJson'] = responseJson.value
+            sessiondata['rescode'] = rescode.value
+            sessiondata['restime'] = restime.value
+            sessiondata['openSelect'] = openSelect.value
+            sessiondata['switchResponse'] = switchResponse.value
+            sessiondata['radio'] = radio.value
+            sessiondata['responseTreeData'] = responseTreeData.value
+            sessiondata['jsonData'] = jsonData.value
+            sessionStorage.setItem(url.value + reqType.value.toLowerCase(), JSON.stringify(sessiondata));
+        }
+       
         if (data != undefined && data != 'identity') {
             const json = JSON.parse(data)
             //文档信息赋值
             desc.value = json.summary
             url.value = json.url
             reqType.value = json.method.toUpperCase()
-            //参数赋值
-            reqParams.value = []
-            for (let index in json.parameters) {
-                if (json.parameters[index].in != 'body') {
-                    json.parameters[index]['active'] = true
-                    json.parameters[index]['value'] = ref('')
-                    reqParams.value.push(json.parameters[index])
-                } else {
-                    reqBody.vlaue = json.parameters[index]
-                }
-            }
+            responseTreeData.value = []
+            let sessionJson = sessionStorage.getItem(json.url + json.method)
+            if(sessionJson != null){
+                //如果不是第一次进来 直接从缓存获取 不需要多次递归
+                let sjson = JSON.parse(sessionJson)
+                editJson.value = sjson.editJson
+                reqBody.value = sjson.reqBody
+                reqParams.value = sjson.reqParams
+                isBody.value = sjson.isBody
+                tabValue.value = sjson.tabValue
+                responseJson.value = sjson.responseJson
+                rescode.value = sjson.rescode
+                restime.value = sjson.restime
+                openSelect.value = sjson.openSelect
+                switchResponse.value = sjson.switchResponse
+                radio.value = sjson.radio
+                responseTreeData.value = sjson.responseTreeData
+                jsonData.value = sjson.jsonData
+                return;
+            }//参数赋值
+           reqParams.value = []
+           for (let index in json.parameters) {
+               if (json.parameters[index].in != 'body') {
+                   json.parameters[index]['active'] = true
+                   json.parameters[index]['value'] = ref('')
+                   reqParams.value.push(json.parameters[index])
+               } else {
+                   reqBody.vlaue = json.parameters[index]
+               }
+           }
+            
             if (reqType.value == 'GET') {
                 isBody.value = false
             } else {
@@ -901,36 +955,38 @@
             //返回值处理
             let res = json.responses['200'].schema
             let def = {}
-            if ('items' in res && '$ref' in res.items) {
-                def = refObj.definitions[res.items.$ref.replace('#/definitions/', '')]
-            } else if ('$ref' in res && res.$ref != undefined) {
-                def = refObj.definitions[res.$ref.replace('#/definitions/', '')]
-            }else if('items' in res){
-                //笑了 不支持变量作为key 跟py还有差距
-                let json = {}
-                json[''] = {
-                        "type":res.items.type,
-                        "description":res.items.type,
-                        "key":'',
-                    }
-                def['properties'] = json
-            }else{
-                def = res
+            if(res != undefined){
+                 if ('items' in res && '$ref' in res.items) {
+                     def = refObj.definitions[res.items.$ref.replace('#/definitions/', '')]
+                 } else if ('$ref' in res && res.$ref != undefined) {
+                     def = refObj.definitions[res.$ref.replace('#/definitions/', '')]
+                 }else if('items' in res){
+                     //笑了 不支持变量作为key 跟py还有差距
+                     let json = {}
+                     json[''] = {
+                             "type":res.items.type,
+                             "description":res.items.type,
+                             "key":'',
+                         }
+                     def['properties'] = json
+                 }else{
+                     def = res
+                 }
+                 out.value = def['properties']
+                 let jsonout = Object.keys(def['properties'])
+                 let resJson = {}
+                 jsonout.forEach((x) => {
+                     //补充字段名
+                     def['properties'][x]['key'] = x
+                     resJson[x] = deep(def['properties'][x],x,responseTreeData.value)
+                 })
+                 jsonData.value = resJson
+                 //递归json数据
+                 if (editJson.value != '') {
+                     format()
+                 }
+                settingParam()
             }
-            out.value = def['properties']
-            let jsonout = Object.keys(def['properties'])
-            let resJson = {}
-            jsonout.forEach((x) => {
-                //补充字段名
-                def['properties'][x]['key'] = x
-                resJson[x] = deep(def['properties'][x],x,responseTreeData.value)
-            })
-            jsonData.value = resJson
-            //递归json数据
-            if (editJson.value != '') {
-                format()
-            }
-           settingParam()
         }
         //body
 

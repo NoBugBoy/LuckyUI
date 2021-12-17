@@ -3,7 +3,7 @@ import axios from 'axios'
 
 
 var instance = axios.create({
-    timeout: 5000,
+    timeout: 60000,
     headers:{'Content-Type':'application/json'}
 })
 instance.interceptors.request.use((data)=> {

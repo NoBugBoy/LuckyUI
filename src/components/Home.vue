@@ -1,5 +1,4 @@
 <template>
-    <n-theme-editor></n-theme-editor>
     <div>
         <n-layout has-sider position="absolute" style="top: 64px; bottom: 64px;">
             <n-layout-sider bordered collapse-mode="width" :collapsed-width="100" :width="280" :native-scrollbar="false"
@@ -39,7 +38,6 @@
 <script setup>
     import {
         NConfigProvider,
-        NThemeEditor,
         NRow,
         NList,
         NListItem,
@@ -314,6 +312,7 @@
             })
         }
         valueRef.value = 'home'
+        sessionStorage.clear()
         route.push('/firstPage')
     }
 
@@ -322,6 +321,8 @@
         return panelsRef.value.length > 1
     })
     const handleClose = (name) => {
+        const s =  panelsRef.value.find((x) => x.id == name)
+        sessionStorage.removeItem(s.data.url + s.data.method)
         const {
             value: panels
         } = panelsRef
@@ -329,6 +330,7 @@
         if (!~nameIndex) return
         panels.splice(nameIndex, 1)
         const first = panels[0]
+        
         routeFor(first.id, first.data)
         valueRef.value = first.id
 

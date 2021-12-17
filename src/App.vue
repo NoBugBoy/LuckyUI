@@ -83,9 +83,11 @@
         window.open("https://github.com/NoBugBoy/YDoc")
     }
     onMounted(() => {
+        //先清理一下
+        sessionStorage.clear()
         let url = window.location.pathname.replace('/doc.html', '')
-        //调试时替换
-        // url = "http://localhost:8888"
+        //调试时替换成自己本地的 同时后端要加跨域
+        // url = "http://127.0.0.1:8080/projectreview"
         //获取分组信息
         let run = axios({
             url: url + "/swagger-resources",
@@ -185,9 +187,9 @@
 
 
             </n-message-provider>
-            <n-layout-footer bordered position="absolute" style="height: 32px;">
+           <!-- <n-layout-footer bordered position="absolute" style="height: 32px;">
 
-            </n-layout-footer>
+            </n-layout-footer> -->
         </n-layout>
     </n-config-provider>
 

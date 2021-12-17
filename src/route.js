@@ -3,7 +3,7 @@ import { createRouter,createWebHashHistory,createWebHistory} from "vue-router";
 
 let VueRoute = createRouter(
    {
-       history:createWebHistory(),
+       history:createWebHashHistory(),
        routes: [
            {
                path: '/',
