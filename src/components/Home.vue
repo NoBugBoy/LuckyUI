@@ -322,7 +322,10 @@
     })
     const handleClose = (name) => {
         const s =  panelsRef.value.find((x) => x.id == name)
-        sessionStorage.removeItem(s.data.url + s.data.method)
+        if(s.data != undefined){
+             sessionStorage.removeItem(s.data.url + s.data.method)
+        }
+       
         const {
             value: panels
         } = panelsRef
