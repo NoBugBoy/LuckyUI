@@ -12,6 +12,7 @@ import 'brace/theme/github'
 import 'brace/theme/vibrant_ink'
 import VueClipboard from 'vue-clipboard2'
 import Moment from 'moment'
+import 'md-editor-v3/lib/style.css';
 
 
 

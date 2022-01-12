@@ -1,6 +1,6 @@
 <template>
     <div>
-        <n-layout has-sider position="absolute" style="top: 64px; bottom: 64px;">
+        <n-layout has-sider position="absolute" style="top: 64px;">
             <n-layout-sider bordered collapse-mode="width" :collapsed-width="100" :width="280" :native-scrollbar="false"
                 show-trigger="bar" content-style="padding: 20px;">
                 <n-menu :on-update:value="menuClick" :collapsed-width="60" :collapsed-icon-size="25"
@@ -16,11 +16,17 @@
                         </n-icon>
                     </template>
                     <template #suffix>
-                        <n-button text @click="closeTabs">
-                            <n-icon size="30">
-                                <close-circle />
-                            </n-icon>
-                        </n-button>
+                        <n-tooltip>
+                              <template #trigger>
+                               <n-button text @click="closeTabs">
+                                   <n-icon size="30">
+                                       <close-circle />
+                                   </n-icon>
+                               </n-button>
+                              </template>
+                              关闭全部标签页,同时清理缓存
+                            </n-tooltip>
+                        
                     </template>
                     <n-tab-pane v-for="panel in panelsRef" :name="panel.id" :tab="panel.name" :key="panel.id"
                         @Click="switchPanel(panel)">
@@ -37,25 +43,11 @@
 
 <script setup>
     import {
-        NConfigProvider,
-        NRow,
-        NList,
-        NListItem,
-        NThing,
         NTabs,
+        NTooltip,
         NTabPane,
-        NTag,
-        NCol,
-        NStatistic,
-        darkTheme,
-        NBackTop,
         NButton,
-        NCard,
-        NBreadcrumb,
         NLayout,
-        NLayoutHeader,
-        NLayoutContent,
-        NLayoutFooter,
         NCollapse,
         NCollapseItem,
         NGradientText,
@@ -81,6 +73,7 @@
     } from 'vue-router'
     import {
         Rocket,
+        ShareSocial,
         Aperture,
         CaretDownOutline,
         Home,
@@ -88,6 +81,9 @@
         FolderOpenSharp,
         ColorFilter
     } from '@vicons/ionicons5'
+    import 
+        CommonApi
+     from '../common.js'
 
     const menuOptions = ref([{
             label: '主页',
@@ -101,6 +97,10 @@
         {
             label: '请求用例管理',
             key: 'manager',
+        },
+        {
+            label: '离线文档分享',
+            key: 'share',
         }
     ])
     let g = inject('g')
@@ -110,27 +110,7 @@
     })
     onMounted(() => {
         let t = g.value['data']
-        //api分组
-        let tags = t.tags
-        let paths = t.paths
-        let key = Object.keys(paths);
-        //重排列结构
-        key.forEach((k) => {
-            let item = paths[k]
-            let innerKey = Object.keys(item);
-            innerKey.forEach((ik) => {
-                const tag = item[ik].tags[0]
-                item[ik]['method'] = ik
-                item[ik]['url'] = k
-                if (Object.keys(pathsTagsMap).indexOf(tag) < 0) {
-                    pathsTagsMap[tag] = []
-                    pathsTagsMap[tag].push(item)
-                } else {
-                    pathsTagsMap[tag].push(item)
-                }
-
-            })
-        })
+        pathsTagsMap = CommonApi.process(t)
         //配置结构
         let apis = Object.keys(pathsTagsMap);
         apis.forEach((api) => {
@@ -231,6 +211,10 @@
             route.push({
                 name: 'Models'
             })
+        }else if (routeKey == 'share'){
+            route.push({
+                name: 'Share'
+            })
         }else {
             route.push({
                 name: 'Api',
@@ -263,7 +247,7 @@
                             h("span", null, option.label),
                             h(NBadge, {
                                 value: count,
-                                max: 10,
+                                max: 20,
                                 type: 'success',
                                 style: "margin-left:6px"
                             }),
@@ -292,9 +276,15 @@
                default: () => h(Aperture)
            })
         }
-        return h(NIcon, null, {
-            default: () => h(Rocket)
-        })
+        else if(option.key === 'share'){
+           return h(NIcon, null, {
+               default: () => h(ShareSocial)
+           })
+        }else{
+            return h(NIcon, null, {
+                default: () => h(Rocket)
+            })
+        }  
     }
     
     let expandIcon = (option) => {
@@ -322,7 +312,10 @@
     })
     const handleClose = (name) => {
         const s =  panelsRef.value.find((x) => x.id == name)
-        sessionStorage.removeItem(s.data.url + s.data.method)
+        if(s.data != undefined){
+             sessionStorage.removeItem(s.data.url + s.data.method)
+        }
+       
         const {
             value: panels
         } = panelsRef

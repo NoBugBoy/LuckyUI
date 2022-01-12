@@ -87,7 +87,7 @@
         sessionStorage.clear()
         let url = window.location.pathname.replace('/doc.html', '')
         //调试时替换成自己本地的 同时后端要加跨域
-        // url = "http://127.0.0.1:8080/projectreview"
+        // url = "http://127.0.0.1:8080"
         //获取分组信息
         let run = axios({
             url: url + "/swagger-resources",

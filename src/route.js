@@ -32,6 +32,12 @@ let VueRoute = createRouter(
                name: 'Models',
                component: () => import("/src/components/Models.vue")
                
+           },
+           {
+               path: '/share',
+               name: 'Share',
+               component: () => import("/src/components/Share.vue")
+               
            }
        ]
    }

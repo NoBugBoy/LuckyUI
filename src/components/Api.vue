@@ -46,7 +46,7 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr v-for="p in reqParams">
+                                            <tr v-for="p in reqParams" :key="p.name">
                                                 <td>{{p.name}}</td>
                                                 <td>{{p.description}}</td>
                                                 <td v-if="p.in == 'header'">
@@ -75,6 +75,9 @@
                                     </n-table>
                                 </n-card>
                                 <n-card title="RequestBody" v-if="isBody && show">
+                                      <n-data-table  ref="table" :columns="columns" :data="bodyTreeData" :row-key="rowKey" :row-class-name="rowClassName"  />
+                                </n-card>
+                                <n-card v-if="isBody && show">
                                     <n-button type='success' style="margin-bottom: 10px;" @Click='format' size="small">格式化</n-button>
                                     <n-button type='success' style="margin-bottom: 10px;margin-left: 10px;"
                                         @Click='zip' size="small">折叠</n-button>
@@ -203,7 +206,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr v-for="p in reqParams">
+                                        <tr v-for="p in reqParams" :key="p.name">
                                             <td>
                                                 <n-switch v-model:value="p.active" />
                                             </td>
@@ -286,6 +289,13 @@
             </n-tab-pane>
 
         </n-tabs>
+        <n-back-top :right="40" :bottom="50">
+            <div
+              style="width: 120px; height: 40px; line-height: 40px; text-align: center; font-size: 16px"
+            >
+              回到顶部
+            </div>
+          </n-back-top>
     </n-card>
 
 </template>
@@ -301,6 +311,7 @@
         NRadioGroup,
         NRadioButton,
         NRadio,
+         NBackTop,
         NSwitch,
         NRow,
         NInputGroupLabel,
@@ -320,12 +331,7 @@
         NSpin,
         NCard,
         NTag,
-        NBreadcrumb,
-        NLayout,
-        NLayoutHeader,
         NTable,
-        NLayoutContent,
-        NLayoutFooter,
         useMessage,
         NSpace,
         NDrawer,
@@ -342,6 +348,7 @@
         getCurrentInstance,
         h,
         inject,
+        onUpdated,
         onMounted,
         ref,
         watch,
@@ -363,6 +370,7 @@
         ColorFilter
     } from '@vicons/ionicons5'
     import axios from "/src/request.js"
+    import CommonApi from '../common.js'
     
     const message = useMessage()
     //处理第三方json编辑框不能跟随主题变色问题
@@ -434,47 +442,7 @@
                   )
                 }
     //一些常用的场景
-    statusList.value = [{
-            "value": "success",
-            "label": "成功"
-        },
-        {
-            "value": 'error',
-            "label": '失败'
-        },
-        {
-            "value": 'error-retry',
-            "label": '失败待重试'
-        },
-        {
-            "value": 'retry',
-            "label": '待重试'
-        },
-        {
-            "value": 'no-auth',
-            "label": '无权限'
-        },
-        {
-            "value": 'no-data',
-            "label": '无响应数据'
-        },
-        {
-            "value": 'no-some-data',
-            "label": '响应缺少部分数据'
-        },
-        {
-            "value": 'big-some-data',
-            "label": '返回了多余数据'
-        },
-        {
-            "value": 'no-format',
-            "label": '响应参数未驼峰命名'
-        },
-        {
-            "value": 'type-error',
-            "label": '参数类型错误'
-        },
-    ]
+    statusList.value = CommonApi.radioConsts
     //请求的content types
     radios.value = [{
             "label": "application/json",
@@ -523,7 +491,7 @@
         //url可能相同但是请求方式必然不同
         const key = 'lucky' + '_' + desc.value +'_'+ reqType.value
         let localRequest = localStorage.getItem(key)
-        if(localRequest != null){
+        if(!!localRequest){
             const jsons = JSON.parse(localRequest)
             if(jsons.findIndex((x) => x.title == itemTitle.value) != -1){
                 message.error('该用例名称已被使用,请更改后重试')
@@ -557,7 +525,7 @@
     }
     let localRef = ref(empty)
     localRef.value = g.value['theme']
-    let refObj = g.value['data']
+    const refObj = g.value['data']
     const alertMsg = '这似乎不是一个JSON吧 朋友？'
 
     //格式化 折叠
@@ -625,7 +593,7 @@
     let switchResponse = ref('Params')
     //参数
     let reqParams = ref([])
-    let reqBody = ref(null)
+    let reqBody = ref({})
     //return 第一层数据
     let out = ref([])
     let rowKey = (row) => row.name
@@ -647,7 +615,7 @@
           title: '类型',
           key: 'type',
           render (row) {
-              if(row.type == '' || row.type == undefined || row.type == null){
+              if(!!row.type){
                   return ''
               }
                   return h(
@@ -669,6 +637,25 @@
           title: '描述',
           key: 'description'
         },
+        {
+          title: '是否必须',
+          key: 'required',
+          render (row) {
+             
+                  return h(
+                      NTag,
+                      {
+                        style: {
+                          marginRight: '6px'
+                        },
+                        round: true,
+                        type: row.required?'error':'info'
+                      },
+                      {
+                        default: () => row.required?'True':'False'
+                      }
+                    )
+        }},
         {
               title: '快速复制字段名',
               key: 'actions',
@@ -699,87 +686,14 @@
       }
 
     //递归将整个json拿出来 key字段 value是类型 ，然后根据类型 mock 一些数据 覆盖value
-    let deep = (dep,key,responseTreeData) => {
-        if ('$ref' in dep || ('items' in dep && '$ref' in dep.items)) {
-            let ref = ''
-            let type = ''
-            if ('$ref' in dep) {
-                type = 'object'
-                ref = dep['$ref'].replace('#/definitions/', '')
-            } else {
-                 type = 'array'
-                ref = dep['items']['$ref'].replace('#/definitions/', '')
-            }
-
-            let realData = refObj.definitions[ref]
-            if (realData == undefined) {
-                return {}
-            }
-            let properties = realData['properties']
-            let json = {}
-            let keys = Object.keys(properties)
-            
-            if(responseTreeData != undefined){
-                let treeChildren = []
-                let tree = {
-                   "name": key,
-                   "type": dep.type,
-                   "description": dep.description,
-                   "children" : treeChildren
-                }
-                for (let item in keys) {
-                    // console.log(properties[keys[item]])
-                    json[keys[item]] = deep(properties[keys[item]],keys[item],treeChildren)
-                    // json[keys[item]] = deep(realData[keys[item]])
-                }
-                responseTreeData.push(tree)
-            }else{
-                for (let item in keys) {
-                    // console.log(properties[keys[item]])
-                    json[keys[item]] = deep(properties[keys[item]],keys[item],undefined)
-                    // json[keys[item]] = deep(realData[keys[item]])
-                }
-            }
-          
-            return json
-        } else {
-            let type = mockDataByType(dep.type)
-            if(responseTreeData != undefined){
-                responseTreeData.push({
-                    "name": key,
-                    "type": dep.type,
-                    "description": dep.description
-                })
-            }
-           
-            return type
-        }
-
-    }
+    let deep = (dep,key,responseTreeData,refobj) => CommonApi.deep(dep,key,responseTreeData,refObj)
     let switchResponseFun = (x) => {
         switchResponse.value = x
-    }
-    //简单转换下
-    let mockDataByType = (type) => {
-        switch (type.toLowerCase()) {
-            case 'array':
-                return [];
-            case 'integer':
-            case 'number':
-                return 0;
-            case 'string':
-                return '';
-            case 'object':
-                return {};
-            case 'string(date-time)':
-                return Moment().format("YYYY-MM-DD HH:mm:ss")
-            default:
-                return '';
-        }
     }
     let resOk = ref(false)
     //发送请求
     let send = () => {
+        
         //切换到参数tab
         switchResponse.value = 'ResponseBody'
         resOk.value = true;
@@ -815,6 +729,7 @@
                 responseJson.value = JSON.stringify(res.data)
                 format0()
                  resOk.value = false
+                   saveSessionData()
             }).catch(error => {
 
                 rescode.value = error.response.status
@@ -841,6 +756,7 @@
                 restime.value = new Date() - res.config.startTime
                 format0()
                  resOk.value = false
+                 saveSessionData()
             }).catch(error => {
                 rescode.value = error.response.status
                 restime.value = new Date() - error.response.config.startTime
@@ -851,7 +767,7 @@
 
         }
        
-
+    
     }
  let overrides = (titile,data) => {
       reqParams.value = data.params
@@ -874,40 +790,49 @@
     let jsonData = ref('')
  //返回值树的结构
     let responseTreeData = ref([])
+    let bodyTreeData = ref([])
     //监听路由变化
+    let saveSessionData = () => {
+        sessionStorage.removeItem(url.value + reqType.value.toLowerCase())
+        let sessiondata = {}
+        sessiondata['editJson'] = editJson.value
+        sessiondata['reqBody'] = reqBody.value
+        sessiondata['reqParams'] = reqParams.value
+        sessiondata['isBody'] = isBody.value
+        sessiondata['tabValue'] = tabValue.value
+        sessiondata['responseJson'] = responseJson.value
+        sessiondata['rescode'] = rescode.value
+        sessiondata['restime'] = restime.value
+        sessiondata['openSelect'] = openSelect.value
+        sessiondata['switchResponse'] = switchResponse.value
+        sessiondata['radio'] = radio.value
+        sessiondata['responseTreeData'] = responseTreeData.value
+        sessiondata['bodyTreeData'] = bodyTreeData.value
+        sessiondata['jsonData'] = jsonData.value
+        sessionStorage.setItem(url.value + reqType.value.toLowerCase(), JSON.stringify(sessiondata));
+    }
     watch(() => route.params, () => {
         const data = route.params.data
         //初始化响应值
         openSelectOptions.value= []
-        sessionStorage.removeItem(desc.value + reqType.value.toLowerCase())
-        if(desc.value != '' && route.path != '/firstPage'){
-            //离开时记录当时所有页面需要知道的状态，当再次进入时获取，删除tab时删除
-            let sessiondata = {}
-            sessiondata['editJson'] = editJson.value
-            sessiondata['reqBody'] = reqBody.value
-            sessiondata['reqParams'] = reqParams.value
-            sessiondata['isBody'] = isBody.value
-            sessiondata['tabValue'] = tabValue.value
-            sessiondata['responseJson'] = responseJson.value
-            sessiondata['rescode'] = rescode.value
-            sessiondata['restime'] = restime.value
-            sessiondata['openSelect'] = openSelect.value
-            sessiondata['switchResponse'] = switchResponse.value
-            sessiondata['radio'] = radio.value
-            sessiondata['responseTreeData'] = responseTreeData.value
-            sessiondata['jsonData'] = jsonData.value
-            sessionStorage.setItem(url.value + reqType.value.toLowerCase(), JSON.stringify(sessiondata));
-        }
-       
-        if (data != undefined && data != 'identity') {
+        if (!!data && data != 'identity') {
             const json = JSON.parse(data)
             //文档信息赋值
             desc.value = json.summary
             url.value = json.url
             reqType.value = json.method.toUpperCase()
             responseTreeData.value = []
+            bodyTreeData.value = []
+            reqBody.value = {}
+            editJson.value = ''
+            switchResponse.value = 'Params'
+            rescode.value = ''
+            restime.value = ''
+            responseJson.value = ''
+            out.value = []
+            jsonData.value = ''
             let sessionJson = sessionStorage.getItem(json.url + json.method)
-            if(sessionJson != null){
+            if(!!sessionJson){
                 //如果不是第一次进来 直接从缓存获取 不需要多次递归
                 let sjson = JSON.parse(sessionJson)
                 editJson.value = sjson.editJson
@@ -923,6 +848,7 @@
                 radio.value = sjson.radio
                 responseTreeData.value = sjson.responseTreeData
                 jsonData.value = sjson.jsonData
+                bodyTreeData.value = sjson.bodyTreeData
                 return;
             }//参数赋值
            reqParams.value = []
@@ -932,7 +858,7 @@
                    json.parameters[index]['value'] = ref('')
                    reqParams.value.push(json.parameters[index])
                } else {
-                   reqBody.vlaue = json.parameters[index]
+                   reqBody.value = json.parameters[index]
                }
            }
             
@@ -941,21 +867,27 @@
             } else {
                 //处理request body 
                 isBody.value = true
-                let bodyRef = reqBody.vlaue.schema.$ref
-                let def = refObj.definitions[bodyRef.replace('#/definitions/', '')]
-                let jsonout = Object.keys(def['properties'])
-                let bodyData = {}
-                jsonout.forEach((x) => {
-                    //补充字段名
-                    def['properties'][x]['key'] = x
-                    bodyData[x] = deep(def['properties'][x],undefined,undefined)
-                })
-                editJson.value = JSON.stringify(bodyData)
+                let bodyRef = reqBody.value?.schema?.$ref
+                
+                if(!!bodyRef){
+                    let def = refObj.definitions[bodyRef.replace('#/definitions/', '')]
+                    let jsonout = Object.keys(def['properties'])
+                    let bodyData = {}
+    
+                    jsonout.forEach((x) => {
+                        //补充字段名
+                        def['properties'][x]['key'] = x
+                        bodyData[x] = deep(def['properties'][x],x,bodyTreeData.value)
+                    })
+                                   
+                    editJson.value = JSON.stringify(bodyData)
+                }
+                
             }
             //返回值处理
             let res = json.responses['200'].schema
             let def = {}
-            if(res != undefined){
+            if(!!res){
                  if ('items' in res && '$ref' in res.items) {
                      def = refObj.definitions[res.items.$ref.replace('#/definitions/', '')]
                  } else if ('$ref' in res && res.$ref != undefined) {
@@ -982,11 +914,12 @@
                  })
                  jsonData.value = resJson
                  //递归json数据
-                 if (editJson.value != '') {
+                 if (!!editJson.value) {
                      format()
                  }
                 settingParam()
             }
+            saveSessionData()
         }
         //body
 
