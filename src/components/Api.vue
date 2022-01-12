@@ -75,9 +75,6 @@
                                     </n-table>
                                 </n-card>
                                 <n-card title="RequestBody" v-if="isBody && show">
-                                      <n-data-table  ref="table" :columns="columns" :data="bodyTreeData" :row-key="rowKey" :row-class-name="rowClassName"  />
-                                </n-card>
-                                <n-card v-if="isBody && show">
                                     <n-button type='success' style="margin-bottom: 10px;" @Click='format' size="small">格式化</n-button>
                                     <n-button type='success' style="margin-bottom: 10px;margin-left: 10px;"
                                         @Click='zip' size="small">折叠</n-button>
@@ -673,25 +670,6 @@
           key: 'description'
         },
         {
-          title: '是否必须',
-          key: 'required',
-          render (row) {
-             
-                  return h(
-                      NTag,
-                      {
-                        style: {
-                          marginRight: '6px'
-                        },
-                        round: true,
-                        type: row.required?'error':'info'
-                      },
-                      {
-                        default: () => row.required?'True':'False'
-                      }
-                    )
-        }},
-        {
               title: '快速复制字段名',
               key: 'actions',
               render (row) {
@@ -740,7 +718,7 @@
             let properties = realData['properties']
             let json = {}
             let keys = Object.keys(properties)
-           
+            
             if(responseTreeData != undefined){
                 let treeChildren = []
                 let tree = {
@@ -770,7 +748,6 @@
                 responseTreeData.push({
                     "name": key,
                     "type": dep.type,
-                    "required": dep.required,
                     "description": dep.description
                 })
             }
@@ -897,7 +874,6 @@
     let jsonData = ref('')
  //返回值树的结构
     let responseTreeData = ref([])
-    let bodyTreeData = ref([])
     //监听路由变化
     watch(() => route.params, () => {
         const data = route.params.data
@@ -919,7 +895,6 @@
             sessiondata['switchResponse'] = switchResponse.value
             sessiondata['radio'] = radio.value
             sessiondata['responseTreeData'] = responseTreeData.value
-            sessiondata['bodyTreeData'] = bodyTreeData.value
             sessiondata['jsonData'] = jsonData.value
             sessionStorage.setItem(url.value + reqType.value.toLowerCase(), JSON.stringify(sessiondata));
         }
@@ -948,7 +923,6 @@
                 radio.value = sjson.radio
                 responseTreeData.value = sjson.responseTreeData
                 jsonData.value = sjson.jsonData
-                bodyTreeData.value = sjson.bodyTreeData
                 return;
             }//参数赋值
            reqParams.value = []
@@ -974,9 +948,8 @@
                 jsonout.forEach((x) => {
                     //补充字段名
                     def['properties'][x]['key'] = x
-                    bodyData[x] = deep(def['properties'][x],x,bodyTreeData.value)
+                    bodyData[x] = deep(def['properties'][x],undefined,undefined)
                 })
-               
                 editJson.value = JSON.stringify(bodyData)
             }
             //返回值处理
