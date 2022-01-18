@@ -615,9 +615,7 @@
           title: '类型',
           key: 'type',
           render (row) {
-              if(!!row.type){
-                  return ''
-              }
+            
                   return h(
                       NTag,
                       {
@@ -628,7 +626,13 @@
                         type: 'warning'
                       },
                       {
-                        default: () => row.type
+                        default: () => { 
+                          
+                            if(row.type == undefined){
+                                return "object";
+                            }
+                            return row.type;
+                        }
                       }
                     )
                 
@@ -641,7 +645,6 @@
           title: '是否必须',
           key: 'required',
           render (row) {
-             
                   return h(
                       NTag,
                       {
@@ -686,7 +689,7 @@
       }
 
     //递归将整个json拿出来 key字段 value是类型 ，然后根据类型 mock 一些数据 覆盖value
-    let deep = (dep,key,responseTreeData,refobj) => CommonApi.deep(dep,key,responseTreeData,refObj)
+    let deep = (dep,key,responseTreeData) => CommonApi.deep(dep,key,responseTreeData)
     let switchResponseFun = (x) => {
         switchResponse.value = x
     }
@@ -812,6 +815,8 @@
         sessionStorage.setItem(url.value + reqType.value.toLowerCase(), JSON.stringify(sessiondata));
     }
     watch(() => route.params, () => {
+         CommonApi.setRefObj(refObj)
+        
         const data = route.params.data
         //初始化响应值
         openSelectOptions.value= []
@@ -888,6 +893,7 @@
             let res = json.responses['200'].schema
             let def = {}
             if(!!res){
+               
                  if ('items' in res && '$ref' in res.items) {
                      def = refObj.definitions[res.items.$ref.replace('#/definitions/', '')]
                  } else if ('$ref' in res && res.$ref != undefined) {
@@ -904,15 +910,20 @@
                  }else{
                      def = res
                  }
+                   
                  out.value = def['properties']
-                 let jsonout = Object.keys(def['properties'])
+                 
+                 let jsonout = Object.keys(def['properties'] == undefined ? [] : def['properties'])
                  let resJson = {}
                  jsonout.forEach((x) => {
+                    
                      //补充字段名
                      def['properties'][x]['key'] = x
                      resJson[x] = deep(def['properties'][x],x,responseTreeData.value)
                  })
+                
                  jsonData.value = resJson
+             
                  //递归json数据
                  if (!!editJson.value) {
                      format()
