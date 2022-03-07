@@ -47,6 +47,7 @@ let refObj = {}
 //深度递归
 let deep = (dep,key,responseTreeData) => {
         if ('$ref' in dep || ('items' in dep && '$ref' in dep.items)) {
+        
             let ref = ''
             let type = ''
             if ('$ref' in dep) {
@@ -56,7 +57,7 @@ let deep = (dep,key,responseTreeData) => {
                  type = 'array'
                 ref = dep['items']['$ref'].replace('#/definitions/', '')
             }
-          
+         
             let realData = refObj?.definitions?.[ref]
             if (realData == undefined) {
                 return {}
@@ -154,7 +155,8 @@ let CommonApi = {
     "setRefObj": (ref) => {
           refObj = ref
       
-    }
+    },
+    "refObj": refObj
 }
 
 export default CommonApi;
