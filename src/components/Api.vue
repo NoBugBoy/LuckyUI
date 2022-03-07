@@ -791,7 +791,7 @@
  //返回值树的结构
     let responseTreeData = ref([])
     let bodyTreeData = ref([])
-    //监听路由变化
+  
     let saveSessionData = () => {
         sessionStorage.removeItem(url.value + reqType.value.toLowerCase())
         let sessiondata = {}
@@ -811,120 +811,131 @@
         sessiondata['jsonData'] = jsonData.value
         sessionStorage.setItem(url.value + reqType.value.toLowerCase(), JSON.stringify(sessiondata));
     }
+    
+    let clear = (json) => {
+        desc.value = json.summary
+        url.value = json.url
+        reqType.value = json.method.toUpperCase()
+        responseTreeData.value = []
+        bodyTreeData.value = []
+        reqBody.value = {}
+        editJson.value = ''
+        switchResponse.value = 'Params'
+        rescode.value = ''
+        restime.value = ''
+        responseJson.value = ''
+        out.value = []
+        jsonData.value = ''
+    }
+    
+    let setData = (sessionJson) => {
+      let sjson = JSON.parse(sessionJson)
+      editJson.value = sjson.editJson
+      reqBody.value = sjson.reqBody
+      reqParams.value = sjson.reqParams
+      isBody.value = sjson.isBody
+      tabValue.value = sjson.tabValue
+      responseJson.value = sjson.responseJson
+      rescode.value = sjson.rescode
+      restime.value = sjson.restime
+      openSelect.value = sjson.openSelect
+      switchResponse.value = sjson.switchResponse
+      radio.value = sjson.radio
+      responseTreeData.value = sjson.responseTreeData
+      jsonData.value = sjson.jsonData
+      bodyTreeData.value = sjson.bodyTreeData
+    }
+      //监听路由变化
     watch(() => route.params, () => {
+        saveSessionData()
         const data = route.params.data
         //初始化响应值
         openSelectOptions.value= []
-        if (!!data && data != 'identity') {
-            const json = JSON.parse(data)
-            //文档信息赋值
-            desc.value = json.summary
-            url.value = json.url
-            reqType.value = json.method.toUpperCase()
-            responseTreeData.value = []
-            bodyTreeData.value = []
-            reqBody.value = {}
-            editJson.value = ''
-            switchResponse.value = 'Params'
-            rescode.value = ''
-            restime.value = ''
-            responseJson.value = ''
-            out.value = []
-            jsonData.value = ''
+        if (data != undefined && data != 'undefined' && data != 'identity') {
+             let json = JSON.parse(data)
+            //清空源数据
+            clear(json)
+            //查看是否有历史数据
             let sessionJson = sessionStorage.getItem(json.url + json.method)
-            if(!!sessionJson){
+          
+            if( sessionJson != undefined ) {
                 //如果不是第一次进来 直接从缓存获取 不需要多次递归
-                let sjson = JSON.parse(sessionJson)
-                editJson.value = sjson.editJson
-                reqBody.value = sjson.reqBody
-                reqParams.value = sjson.reqParams
-                isBody.value = sjson.isBody
-                tabValue.value = sjson.tabValue
-                responseJson.value = sjson.responseJson
-                rescode.value = sjson.rescode
-                restime.value = sjson.restime
-                openSelect.value = sjson.openSelect
-                switchResponse.value = sjson.switchResponse
-                radio.value = sjson.radio
-                responseTreeData.value = sjson.responseTreeData
-                jsonData.value = sjson.jsonData
-                bodyTreeData.value = sjson.bodyTreeData
+                setData(sessionJson)
                 return;
-            }//参数赋值
-           reqParams.value = []
-           for (let index in json.parameters) {
-               if (json.parameters[index].in != 'body') {
-                   json.parameters[index]['active'] = true
-                   json.parameters[index]['value'] = ref('')
-                   reqParams.value.push(json.parameters[index])
-               } else {
-                   reqBody.value = json.parameters[index]
-               }
-           }
-            
-            if (reqType.value == 'GET') {
-                isBody.value = false
             } else {
-                //处理request body 
-                isBody.value = true
-                let bodyRef = reqBody.value?.schema?.$ref
-                
-                if(!!bodyRef){
-                    let def = refObj.definitions[bodyRef.replace('#/definitions/', '')]
-                    let jsonout = Object.keys(def['properties'])
-                    let bodyData = {}
-    
-                    jsonout.forEach((x) => {
-                        //补充字段名
-                        def['properties'][x]['key'] = x
-                        bodyData[x] = deep(def['properties'][x],x,bodyTreeData.value)
-                    })
-                                   
-                    editJson.value = JSON.stringify(bodyData)
+                reqParams.value = []
+                for (let index in json.parameters) {
+                    if (json.parameters[index].in != 'body') {
+                        json.parameters[index]['active'] = true
+                        json.parameters[index]['value'] = ref('')
+                        reqParams.value.push(json.parameters[index])
+                    } else {
+                        reqBody.value = json.parameters[index]
+                    }
                 }
-                
-            }
-            //返回值处理
-            let res = json.responses['200'].schema
-            let def = {}
-            if(!!res){
-                 if ('items' in res && '$ref' in res.items) {
-                     def = refObj.definitions[res.items.$ref.replace('#/definitions/', '')]
-                 } else if ('$ref' in res && res.$ref != undefined) {
-                     def = refObj.definitions[res.$ref.replace('#/definitions/', '')]
-                 }else if('items' in res){
-                     //笑了 不支持变量作为key 跟py还有差距
-                     let json = {}
-                     json[''] = {
-                             "type":res.items.type,
-                             "description":res.items.type,
-                             "key":'',
-                         }
-                     def['properties'] = json
-                 }else{
-                     def = res
+                 
+                 if (reqType.value == 'GET') {
+                     isBody.value = false
+                 } else {
+                     //处理request body 
+                     isBody.value = true
+                     let bodyRef = reqBody.value?.schema?.$ref
+                     
+                     if(!!bodyRef){
+                         let def = refObj.definitions[bodyRef.replace('#/definitions/', '')]
+                         let jsonout = Object.keys(def['properties'])
+                         let bodyData = {}
+                    
+                         jsonout.forEach((x) => {
+                             //补充字段名
+                             def['properties'][x]['key'] = x
+                             bodyData[x] = deep(def['properties'][x],x,bodyTreeData.value)
+                         })
+                                        
+                         editJson.value = JSON.stringify(bodyData)
+                     }
+                     
                  }
-                 out.value = def['properties']
-                 let jsonout = Object.keys(def['properties'])
-                 let resJson = {}
-                 jsonout.forEach((x) => {
-                     //补充字段名
-                     def['properties'][x]['key'] = x
-                     resJson[x] = deep(def['properties'][x],x,responseTreeData.value)
-                 })
-                 jsonData.value = resJson
-                 //递归json数据
-                 if (!!editJson.value) {
-                     format()
+                 //返回值处理
+                 let res = json.responses['200'].schema
+                 let def = {}
+                 if(!!res){
+                      if ('items' in res && '$ref' in res.items) {
+                          def = refObj.definitions[res.items.$ref.replace('#/definitions/', '')]
+                      } else if ('$ref' in res && res.$ref != undefined) {
+                          def = refObj.definitions[res.$ref.replace('#/definitions/', '')]
+                      }else if('items' in res){
+                          let json = {}
+                          json[''] = {
+                                  "type":res.items.type,
+                                  "description":res.items.type,
+                                  "key":'',
+                              }
+                          def['properties'] = json
+                      }else{
+                          def = res
+                      }
+                      out.value = def['properties']
+                      let jsonout = def['properties'] != null ?  Object.keys(def['properties']) : []
+                      let resJson = {}
+                      jsonout.forEach((x) => {
+                          //补充字段名
+                          def['properties'][x]['key'] = x
+                          resJson[x] = deep(def['properties'][x],x,responseTreeData.value)
+                      })
+                      jsonData.value = resJson
+                      //递归json数据
+                      if (!!editJson.value) {
+                          format()
+                      }
+                     settingParam()
                  }
-                settingParam()
+                 saveSessionData()
             }
-            saveSessionData()
+            
+        }else{
+            console.log("我只是是想要一个冰墩墩er....")
         }
-        //body
-
-
-
     }, {
         immediate: true
     })

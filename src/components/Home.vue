@@ -28,11 +28,11 @@
                             </n-tooltip>
                         
                     </template>
-                    <n-tab-pane v-for="panel in panelsRef" :name="panel.id" :tab="panel.name" :key="panel.id"
-                        @Click="switchPanel(panel)">
+                   <n-tab-pane v-for="panel in panelsRef" :name="panel.id" :tab="panel.name" @click="switchPanel">
+                       {{switchPanel(panel)}}
                     </n-tab-pane>
                 </n-tabs>
-                <router-view :key="dynamicKey"></router-view>
+               <router-view key="dynamicKey"></router-view>]
             </n-layout>
         </n-layout>
     </div>
@@ -173,12 +173,13 @@
     } 
     const valueRef = ref('')
     valueRef.value = 'home'
-    const panelsRef = ref([{
+    let panelsRef = ref([{
         "id": "home",
         "name": "主页"
     }])
     let route = useRouter()
     let menuClick = (key, item) => {
+          console.log(key, item)
         if (!panelsRef.value.find((x) => x.id == key)) {
             panelsRef.value.push({
                 "id": key,
@@ -191,11 +192,13 @@
 
     }
     let switchPanel = (panel) => {
+        console.log(panel)
         routeFor(panel.id, panel.data)
     }
 
     //公共的tab和侧边栏跳转
     let routeFor = (routeKey, data) => {
+        console.log(routeKey, data)
         if (routeKey == 'home') {
             route.push({
                 name: 'FirstPage',
