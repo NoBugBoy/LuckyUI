@@ -32,7 +32,7 @@
                        {{switchPanel(panel)}}
                     </n-tab-pane>
                 </n-tabs>
-               <router-view key="dynamicKey"></router-view>]
+               <router-view key="dynamicKey"></router-view>
             </n-layout>
         </n-layout>
     </div>
@@ -74,6 +74,7 @@
     import {
         Rocket,
         ShareSocial,
+        Analytics,
         Aperture,
         CaretDownOutline,
         Home,
@@ -110,6 +111,15 @@
     })
     onMounted(() => {
         let t = g.value['data']
+        //是否开启增强菜单
+        let isBoost = g.value['data']['boost']
+        if(isBoost){
+             menuOptions.value.push({
+                "label": "方法调用追踪",
+                "key": "methodTrace",
+                "name": "methodTrace",
+            })
+        }
         pathsTagsMap = CommonApi.process(t)
         //配置结构
         let apis = Object.keys(pathsTagsMap);
@@ -157,7 +167,6 @@
             }
             menuOptions.value.push(menu)
         })
-
 
     })
     const groupFunc = (group) => {
@@ -218,6 +227,10 @@
             route.push({
                 name: 'Share'
             })
+        }else if(routeKey == 'methodTrace'){
+          route.push({
+              name: 'MethodTrace'
+          })
         }else {
             route.push({
                 name: 'Api',
@@ -282,6 +295,10 @@
         else if(option.key === 'share'){
            return h(NIcon, null, {
                default: () => h(ShareSocial)
+           })
+        }else if(option.key === 'methodTrace'){
+           return h(NIcon, null, {
+               default: () => h(Analytics)
            })
         }else{
             return h(NIcon, null, {

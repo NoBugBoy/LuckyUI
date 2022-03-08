@@ -38,7 +38,12 @@ let VueRoute = createRouter(
                name: 'Share',
                component: () => import("/src/components/Share.vue")
                
-           }
+           },
+           {
+               path: '/methodTrace',
+               name: 'MethodTrace',
+               component: () => import("/src/components/MethodTrace.vue")
+           },
        ]
    }
 )
